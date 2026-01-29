@@ -62,14 +62,15 @@ export function WalletConnect() {
             {/* Wallet Selection Modal */}
             {showModal && (
                 <div
-                    className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+                    className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
                     onClick={() => setShowModal(false)}
                 >
                     <div
-                        className="bg-card w-full max-w-sm rounded-xl border shadow-lg relative my-auto animate-in zoom-in-95 duration-300"
+                        className="bg-card w-full max-w-sm max-h-[85vh] rounded-xl border shadow-lg relative flex flex-col animate-in zoom-in-95 duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 pb-2">
+                        {/* Header */}
+                        <div className="p-6 pb-4 shrink-0">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-xl font-bold">Connect Wallet</h3>
                                 <Button variant="ghost" size="icon" onClick={() => setShowModal(false)}>
@@ -79,14 +80,15 @@ export function WalletConnect() {
                             <p className="text-muted-foreground text-sm">Choose how you want to connect.</p>
                         </div>
 
-                        <div className="px-4 pb-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                        {/* Scrollable connector list */}
+                        <div className="px-4 space-y-2 overflow-y-auto flex-1 min-h-0">
                             {connectors.map((connector) => (
                                 <button
                                     key={connector.id}
                                     onClick={() => handleConnect(connector)}
                                     className="w-full flex items-center justify-between p-4 rounded-xl border hover:bg-secondary transition-colors group text-left"
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 min-w-0">
                                         <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">
                                             {connector.id.includes('coinbase') ? '🔵' : '🦊'}
                                         </div>
@@ -106,7 +108,8 @@ export function WalletConnect() {
                             ))}
                         </div>
 
-                        <div className="p-4 bg-secondary/20 border-t text-center text-xs text-muted-foreground">
+                        {/* Footer */}
+                        <div className="p-4 bg-secondary/20 border-t text-center text-xs text-muted-foreground shrink-0">
                             New to wallets? <a href="https://www.coinbase.com/wallet" target="_blank" rel="noreferrer" className="text-primary hover:underline">Get one here</a>
                         </div>
                     </div>
