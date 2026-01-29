@@ -66,10 +66,10 @@ export function WalletConnect() {
                     onClick={() => setShowModal(false)}
                 >
                     <div
-                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
+                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden max-h-[85vh] flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 pb-2">
+                        <div className="p-6 pb-2 shrink-0">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-xl font-bold">Connect Wallet</h3>
                                 <Button variant="ghost" size="icon" onClick={() => setShowModal(false)}>
@@ -79,29 +79,29 @@ export function WalletConnect() {
                             <p className="text-muted-foreground text-sm">Choose how you want to connect.</p>
                         </div>
 
-                        <div className="p-4 space-y-2">
+                        <div className="p-4 space-y-2 overflow-y-auto">
                             {connectors.map((connector) => (
                                 <button
                                     key={connector.id}
                                     onClick={() => handleConnect(connector)}
-                                    className="w-full flex items-center justify-between p-4 rounded-xl border hover:bg-secondary transition-colors group text-left"
+                                    className="w-full flex items-center justify-between p-4 rounded-xl border hover:bg-secondary transition-colors group text-left shrink-0"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-xl">
+                                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">
                                             {connector.id.includes('coinbase') ? '🔵' : '🦊'}
                                         </div>
-                                        <div>
-                                            <div className="font-semibold">
+                                        <div className="overflow-hidden">
+                                            <div className="font-semibold truncate">
                                                 {connector.name === 'Injected' ? 'Browser Wallet' : connector.name}
                                             </div>
-                                            <div className="text-xs text-muted-foreground">
+                                            <div className="text-xs text-muted-foreground truncate">
                                                 {connector.id.includes('coinbase')
-                                                    ? 'Best for mobile & smart wallet'
+                                                    ? 'Best for mobile'
                                                     : 'MetaMask, Rainbow, etc.'}
                                             </div>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                                 </button>
                             ))}
                         </div>
