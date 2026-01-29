@@ -3,10 +3,11 @@ import { PhotoCard } from './PhotoCard'
 import { useVotes } from '../hooks/useVotes'
 import { Button } from './ui/button'
 import { Loader2 } from 'lucide-react'
+import { sortByFeedScore, applyDiversity, getTrending, getTopVoted, getRecent } from '../lib/feedAlgorithm'
 
 export function PhotoFeed({ photos, loading }) {
     const { getVoteCount } = useVotes()
-    const [activeTab, setActiveTab] = useState('trending')
+    const [activeTab, setActiveTab] = useState('for-you')
 
     if (loading) {
         return (
@@ -17,20 +18,20 @@ export function PhotoFeed({ photos, loading }) {
         )
     }
 
-    // Calculate trending score (votes + recency boost)
-    const withScores = photos.map(p => {
-        const votes = getVoteCount(p.id)
-        const hoursAge = (Date.now() - p.createdAt) / 3600000
-        const recencyBoost = Math.max(0, 10 - hoursAge / 6) // Boost for first 60 hours
-        return { ...p, votes, score: votes + recencyBoost }
-    })
+    // Enrich photos with vote counts
+    const enrichedPhotos = photos.map(p => ({
+        ...p,
+        votes: getVoteCount(p.id)
+    }))
 
-    // Get different feeds
-    const trendingPhotos = [...withScores].sort((a, b) => b.score - a.score).slice(0, 12)
-    const recentPhotos = [...photos].sort((a, b) => b.createdAt - a.createdAt).slice(0, 12)
-    const topPhotos = [...withScores].sort((a, b) => b.votes - a.votes).slice(0, 12)
+    // Apply smart feed algorithm
+    const algorithmFeed = applyDiversity(sortByFeedScore(enrichedPhotos), 2).slice(0, 12)
+    const trendingPhotos = getTrending(enrichedPhotos, 12)
+    const recentPhotos = getRecent(enrichedPhotos, 12)
+    const topPhotos = getTopVoted(enrichedPhotos, { limit: 12 })
 
     const tabs = [
+        { id: 'for-you', label: '✨ For You', photos: algorithmFeed },
         { id: 'trending', label: '🔥 Trending', photos: trendingPhotos },
         { id: 'recent', label: '🆕 Recent', photos: recentPhotos },
         { id: 'top', label: '⭐ Top Voted', photos: topPhotos },

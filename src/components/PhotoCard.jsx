@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { getIPFSUrl } from '../lib/ipfs'
 import { DonateModal } from './DonateModal'
@@ -7,10 +7,11 @@ import { useProfiles } from '../hooks/useProfiles'
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
-import { Heart, Gift, Loader2, X, Share2 } from 'lucide-react'
+import { Heart, Gift, Loader2, X, Share2, Download, Copy, Check } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Basename } from './Basename'
 import { triggerConfetti } from '../lib/confetti'
+import { generateOGImage, downloadOGImage, copyOGImageToClipboard } from '../lib/ogImage'
 
 export function PhotoCard({ photo }) {
     const { address, isConnected } = useAccount()
@@ -19,8 +20,24 @@ export function PhotoCard({ photo }) {
     const { getDisplayName, getAvatar } = useProfiles()
     const [showDonate, setShowDonate] = useState(false)
     const [showDetails, setShowDetails] = useState(false)
+    const [showShareMenu, setShowShareMenu] = useState(false)
     const [imageError, setImageError] = useState(false)
     const [signing, setSigning] = useState(false)
+    const [copied, setCopied] = useState(false)
+    const shareMenuRef = useRef(null)
+
+    // Close share menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (shareMenuRef.current && !shareMenuRef.current.contains(e.target)) {
+                setShowShareMenu(false)
+            }
+        }
+        if (showShareMenu) {
+            document.addEventListener('mousedown', handleClickOutside)
+            return () => document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [showShareMenu])
 
     const votes = getVoteCount(photo.id)
     const voted = hasVoted(photo.id, address)
@@ -56,23 +73,63 @@ export function PhotoCard({ photo }) {
 
     const handleShare = (e) => {
         e.stopPropagation()
-        const text = `Checking out ${photo.title} on BasedPaws! 🐕 #BasedPaws @base`
-        const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`
+        const text = `Check out "${photo.title}" on BasedPaws! 🐾\n\n❤️ ${votes} votes\n\n#BasedPaws @base`
+
+        const shareImageUrl = photo.imageUrl || getIPFSUrl(photo.cid)
+        let url = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`
+
+        // Only embed valid public image URLs
+        // Filter out data: (too large), blob: (local only), and localhost (not public)
+        const isValidEmbed = shareImageUrl &&
+            !shareImageUrl.startsWith('data:') &&
+            !shareImageUrl.startsWith('blob:') &&
+            !shareImageUrl.includes('localhost') &&
+            !shareImageUrl.includes('127.0.0.1');
+
+        if (isValidEmbed) {
+            url += `&embeds[]=${encodeURIComponent(shareImageUrl)}`
+        }
+
         window.open(url, '_blank')
     }
 
+    const handleCopyOG = async (e) => {
+        e.stopPropagation()
+        const photoWithVotes = { ...photo, votes }
+        const success = await copyOGImageToClipboard(photoWithVotes)
+        if (success) {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        }
+    }
+
+    const handleDownloadOG = async (e) => {
+        e.stopPropagation()
+        const photoWithVotes = { ...photo, votes }
+        await downloadOGImage(photoWithVotes, `${photo.title.replace(/\s+/g, '-')}-basedpaws.png`)
+    }
+
     const imageUrl = photo.imageUrl || getIPFSUrl(photo.cid)
+    const [imageLoading, setImageLoading] = useState(true)
 
     return (
         <>
             <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group border-border/60" onClick={() => setShowDetails(true)}>
                 <div className="relative aspect-square bg-secondary/20">
+                    {/* Skeleton loader */}
+                    {imageLoading && !imageError && (
+                        <div className="absolute inset-0 bg-secondary animate-pulse flex items-center justify-center">
+                            <span className="text-4xl opacity-30">🐾</span>
+                        </div>
+                    )}
                     {!imageError ? (
                         <img
                             src={imageUrl}
                             alt={photo.title}
-                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                            onError={() => setImageError(true)}
+                            className={`object-cover w-full h-full group-hover:scale-105 transition-transform duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={() => setImageLoading(false)}
+                            onError={() => { setImageError(true); setImageLoading(false) }}
+                            loading="lazy"
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
@@ -171,7 +228,7 @@ export function PhotoCard({ photo }) {
                             </div>
 
                             <div className="pt-4 sm:pt-6 border-t space-y-2 sm:space-y-3 shrink-0">
-                                <div className="flex gap-3">
+                                <div className="flex gap-2 sm:gap-3">
                                     <Button
                                         size="lg"
                                         className={cn("flex-[2] gap-2", voted && "bg-red-500 hover:bg-red-600")}
@@ -181,15 +238,45 @@ export function PhotoCard({ photo }) {
                                         {signing ? <Loader2 className="size-5 animate-spin" /> : <Heart className={cn("size-5", voted && "fill-current")} />}
                                         {voted ? "Voted" : "Vote"}
                                     </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="lg"
-                                        className="flex-1 gap-2"
-                                        onClick={handleShare}
-                                    >
-                                        <Share2 className="size-5" />
-                                        Cast
-                                    </Button>
+
+                                    {/* Share Menu */}
+                                    <div ref={shareMenuRef} className="relative flex-1">
+                                        <Button
+                                            variant="secondary"
+                                            size="lg"
+                                            className="w-full gap-2"
+                                            onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu) }}
+                                        >
+                                            <Share2 className="size-5" />
+                                            Share
+                                        </Button>
+
+                                        {showShareMenu && (
+                                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-card border rounded-lg shadow-lg overflow-hidden z-10 animate-in slide-in-from-bottom-2 duration-200">
+                                                <button
+                                                    className="w-full px-4 py-3 text-left text-sm hover:bg-secondary flex items-center gap-3 transition-colors"
+                                                    onClick={handleShare}
+                                                >
+                                                    <Share2 className="size-4 text-primary" />
+                                                    Cast on Warpcast
+                                                </button>
+                                                <button
+                                                    className="w-full px-4 py-3 text-left text-sm hover:bg-secondary flex items-center gap-3 transition-colors border-t"
+                                                    onClick={handleCopyOG}
+                                                >
+                                                    {copied ? <Check className="size-4 text-green-500" /> : <Copy className="size-4 text-muted-foreground" />}
+                                                    {copied ? 'Copied!' : 'Copy Share Image'}
+                                                </button>
+                                                <button
+                                                    className="w-full px-4 py-3 text-left text-sm hover:bg-secondary flex items-center gap-3 transition-colors border-t"
+                                                    onClick={handleDownloadOG}
+                                                >
+                                                    <Download className="size-4 text-muted-foreground" />
+                                                    Download Share Image
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <Button
                                     variant="outline"

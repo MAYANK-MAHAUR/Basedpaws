@@ -9,17 +9,42 @@
   <meta name="description"
     content="Share and discover the funniest pet photos on Base. Upload, vote, and tip your favorite furry friends!" />
   <meta name="theme-color" content="#0052FF" />
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://basedpaws.vercel.app/" />
+  <meta property="og:title" content="BasedPaws - Funny Pet Photos on Base" />
+  <meta property="og:description"
+    content="Share and discover the funniest pet photos on Base. Upload, vote, and tip your favorite furry friends!" />
+  <meta property="og:image" content="https://basedpaws.vercel.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BasedPaws - Funny Pet Photos on Base" />
+  <meta name="twitter:description"
+    content="Share and discover the funniest pet photos on Base. Upload, vote, and tip!" />
+  <meta name="twitter:image" content="https://basedpaws.vercel.app/og-image.png" />
+
+  <!-- Farcaster Frame -->
+  <meta property="fc:frame" content="vNext" />
+  <meta property="fc:frame:image" content="https://basedpaws.vercel.app/og-image.png" />
+  <meta property="fc:frame:button:1" content="🐾 Open BasedPaws" />
+  <meta property="fc:frame:button:1:action" content="link" />
+  <meta property="fc:frame:button:1:target" content="https://basedpaws.vercel.app/" />
+
   <meta name="base:app_id" content="697b1bf47a620235c741a897" />
   <meta name="fc:miniapp" content='{
     "version": "next",
-    "imageUrl": "https://basedpaws.vercel.app/vite.svg",
+    "imageUrl": "https://basedpaws.vercel.app/og-image.png",
     "button": {
       "title": "Launch BasedPaws",
       "action": {
         "type": "launch_miniapp",
         "name": "BasedPaws",
         "url": "https://basedpaws.vercel.app/",
-        "splashImageUrl": "https://basedpaws.vercel.app/vite.svg",
+        "splashImageUrl": "https://basedpaws.vercel.app/og-image.png",
         "splashBackgroundColor": "#0052FF"
       }
     }

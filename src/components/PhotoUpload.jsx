@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { uploadToIPFS } from '../lib/ipfs'
+import { processImage, formatFileSize } from '../lib/imageProcessor'
 import { usePhotos } from '../hooks/usePhotos'
 import { Button } from './ui/button'
-import { Loader2, Upload, Image as ImageIcon, X } from 'lucide-react'
+import { Loader2, Upload, Image as ImageIcon, X, Zap } from 'lucide-react'
 import { triggerConfetti } from '../lib/confetti'
 
 export function PhotoUpload({ onUploadComplete }) {
@@ -16,15 +17,49 @@ export function PhotoUpload({ onUploadComplete }) {
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
     const [signing, setSigning] = useState(false)
+    const [compressing, setCompressing] = useState(false)
+    const [compressionStats, setCompressionStats] = useState(null)
     const [success, setSuccess] = useState(false)
     const fileInputRef = useRef(null)
 
-    const handleFile = (f) => {
+    const handleFile = async (f) => {
         if (!f.type.startsWith('image/')) return alert('Please select an image')
-        setFile(f)
+
+        // Show preview immediately
         const reader = new FileReader()
         reader.onload = (e) => setPreview(e.target.result)
         reader.readAsDataURL(f)
+
+        // Compress image in background
+        setCompressing(true)
+        try {
+            const result = await processImage(f, {
+                maxWidth: 1920,
+                maxHeight: 1080,
+                quality: 0.85,
+                format: 'webp'
+            })
+
+            // Create new file from blob
+            const compressedFile = new File([result.blob], f.name.replace(/\.[^.]+$/, '.webp'), {
+                type: 'image/webp'
+            })
+
+            setFile(compressedFile)
+            setCompressionStats({
+                original: formatFileSize(result.originalSize),
+                compressed: formatFileSize(result.compressedSize),
+                savings: result.savings,
+                quality: result.metrics.qualityLabel,
+                qualityScore: result.metrics.qualityScore
+            })
+        } catch (err) {
+            console.error('Compression failed, using original:', err)
+            setFile(f)
+            setCompressionStats(null)
+        } finally {
+            setCompressing(false)
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -45,7 +80,8 @@ export function PhotoUpload({ onUploadComplete }) {
                 title: title.trim(),
                 cid: result.cid,
                 imageUrl: result.url || preview,
-                ownerAddress: address
+                ownerAddress: address,
+                qualityScore: compressionStats?.qualityScore || 0.5
             })
             setSuccess(true)
             triggerConfetti()
@@ -54,6 +90,7 @@ export function PhotoUpload({ onUploadComplete }) {
                 setPreview(null)
                 setTitle('')
                 setSuccess(false)
+                setCompressionStats(null)
                 if (onUploadComplete) onUploadComplete()
             }, 1500)
         } catch (error) {
@@ -116,11 +153,34 @@ export function PhotoUpload({ onUploadComplete }) {
                         <button
                             type="button"
                             className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
-                            onClick={() => { setFile(null); setPreview(null); setTitle('') }}
+                            onClick={() => { setFile(null); setPreview(null); setTitle(''); setCompressionStats(null) }}
                         >
                             <X className="size-4" />
                         </button>
+
+                        {/* Compression Stats Badge */}
+                        {compressing && (
+                            <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs flex items-center gap-1">
+                                <Loader2 className="size-3 animate-spin" />
+                                Optimizing...
+                            </div>
+                        )}
+                        {compressionStats && !compressing && (
+                            <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs flex items-center gap-2">
+                                <Zap className="size-3 text-green-400" />
+                                <span>{compressionStats.original} → {compressionStats.compressed}</span>
+                                <span className="text-green-400 font-medium">-{compressionStats.savings}</span>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Quality indicator */}
+                    {compressionStats && (
+                        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                            <span>Quality: <span className={`font-medium ${compressionStats.quality === 'Excellent' ? 'text-green-500' : compressionStats.quality === 'Good' ? 'text-blue-500' : 'text-yellow-500'}`}>{compressionStats.quality}</span></span>
+                            <span>Format: WebP</span>
+                        </div>
+                    )}
 
                     <input
                         type="text"
@@ -132,8 +192,10 @@ export function PhotoUpload({ onUploadComplete }) {
                         autoFocus
                     />
 
-                    <Button type="submit" size="lg" className="w-full" disabled={signing || uploading || !title.trim()}>
-                        {signing ? (
+                    <Button type="submit" size="lg" className="w-full" disabled={signing || uploading || compressing || !title.trim() || !file}>
+                        {compressing ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Optimizing Image...</>
+                        ) : signing ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sign to Continue...</>
                         ) : uploading ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
