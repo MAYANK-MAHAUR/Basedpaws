@@ -1,29 +1,45 @@
-import { useState } from 'react'
-import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi'
 import { parseEther } from 'viem'
+import { base } from 'wagmi/chains'
 import { usePhotos } from '../hooks/usePhotos'
 import { Button } from './ui/button'
-import { X, Loader2, Gift } from 'lucide-react'
+import { X, Loader2, Gift, AlertCircle } from 'lucide-react'
 
 const PRESET_AMOUNTS = ['0.001', '0.005', '0.01', '0.05']
 
 export function DonateModal({ photo, onClose }) {
-    const { isConnected } = useAccount()
+    const { address, isConnected, chain } = useAccount()
+    const { switchChain } = useSwitchChain()
     const { updateDonations } = usePhotos()
     const [amount, setAmount] = useState('0.005')
     const [customAmount, setCustomAmount] = useState('')
     const [error, setError] = useState('')
 
-    const { data: hash, sendTransaction, isPending } = useSendTransaction()
+    const { data: hash, sendTransaction, isPending, error: txError } = useSendTransaction()
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
     const finalAmount = customAmount || amount
+    const isBase = chain?.id === base.id
+
+    // Check for txError from hook
+    useEffect(() => {
+        if (txError) {
+            setError(txError.shortMessage || txError.message || 'Transaction failed')
+        }
+    }, [txError])
 
     const handleDonate = async () => {
         if (!photo.ownerAddress) {
-            setError('Photo owner address not found')
+            setError('Error: This photo has no wallet address attached.')
             return
         }
+
+        if (!isBase) {
+            switchChain({ chainId: base.id })
+            return
+        }
+
         setError('')
         try {
             sendTransaction({
@@ -31,6 +47,7 @@ export function DonateModal({ photo, onClose }) {
                 value: parseEther(finalAmount),
             })
         } catch (err) {
+            console.error(err)
             setError(err.message || 'Transaction failed')
         }
     }
@@ -41,9 +58,9 @@ export function DonateModal({ photo, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
             <div className="bg-card w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative p-6 animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
-                <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6 sm:hidden" /> {/* Drag handle for mobile */}
+                <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6 sm:hidden" />
                 <Button variant="ghost" size="icon" className="absolute right-2 top-2 hidden sm:flex" onClick={onClose}>
                     <X className="size-4" />
                 </Button>
@@ -93,20 +110,33 @@ export function DonateModal({ photo, onClose }) {
                                 <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">ETH</span>
                             </div>
 
-                            {error && <div className="text-xs text-red-500 font-medium">{error}</div>}
+                            {error && (
+                                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-600 text-xs font-medium">
+                                    <AlertCircle className="size-4 shrink-0" />
+                                    {error}
+                                </div>
+                            )}
 
-                            <Button
-                                size="lg"
-                                className="w-full"
-                                onClick={handleDonate}
-                                disabled={!isConnected || isPending || isConfirming}
-                            >
-                                {isPending || isConfirming ? (
-                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isConfirming ? 'Confirming...' : 'Sending...'}</>
-                                ) : (
-                                    <>Send {finalAmount} ETH</>
-                                )}
-                            </Button>
+                            {!photo.ownerAddress ? (
+                                <div className="p-4 bg-muted/50 rounded-lg text-center text-sm text-muted-foreground">
+                                    This photo has no address linked 😔
+                                </div>
+                            ) : (
+                                <Button
+                                    size="lg"
+                                    className="w-full"
+                                    onClick={handleDonate}
+                                    disabled={!isConnected || isPending || isConfirming}
+                                >
+                                    {isPending || isConfirming ? (
+                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isConfirming ? 'Confirming...' : 'Sending...'}</>
+                                    ) : !isBase ? (
+                                        'Switch to Base to Tip'
+                                    ) : (
+                                        <>Send {finalAmount} ETH</>
+                                    )}
+                                </Button>
+                            )}
                         </>
                     )}
                 </div>
