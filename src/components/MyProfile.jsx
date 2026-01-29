@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { usePhotos } from '../hooks/usePhotos'
 import { useVotes } from '../hooks/useVotes'
+import { useProfiles } from '../hooks/useProfiles'
 import { getIPFSUrl } from '../lib/ipfs'
 import { Button } from './ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { X, Trophy, Edit, Trash2 } from 'lucide-react'
+import { X, Trophy, Edit, Trash2, Settings } from 'lucide-react'
+import { ProfileSetup } from './ProfileSetup'
 
 const getEditTimeLeft = (createdAt) => {
     const deadline = createdAt + 24 * 60 * 60 * 1000
@@ -28,10 +30,13 @@ export function MyProfile({ onClose }) {
     const { address } = useAccount()
     const { photos, deletePhoto, updatePhoto } = usePhotos()
     const { getVoteCount, getAllVotesCount } = useVotes()
+    const { getProfile, setProfile, getDisplayName } = useProfiles()
     const [tab, setTab] = useState('photos')
     const [editing, setEditing] = useState(null)
     const [editTitle, setEditTitle] = useState('')
+    const [userEditing, setUserEditing] = useState(false)
 
+    const profile = getProfile(address)
     const myPhotos = photos.filter((p) => p.ownerAddress === address)
     const stats = {
         uploads: myPhotos.length,
@@ -39,6 +44,19 @@ export function MyProfile({ onClose }) {
         receivedVotes: myPhotos.reduce((sum, p) => sum + (getVoteCount(p.id) || 0), 0),
     }
     const unlocked = ACHIEVEMENTS.filter((a) => a.check(stats))
+
+    if (userEditing) {
+        return (
+            <ProfileSetup
+                address={address}
+                onComplete={(data) => {
+                    setProfile(address, data)
+                    setUserEditing(false)
+                }}
+                onSkip={() => setUserEditing(false)}
+            />
+        )
+    }
 
     return (
         <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
@@ -48,10 +66,21 @@ export function MyProfile({ onClose }) {
                     <div className="w-12 h-1.5 bg-muted rounded-full absolute top-2 left-1/2 -translate-x-1/2 sm:hidden" />
                     <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-0">
                         <Avatar className="size-12 sm:size-16 border-2 border-background shadow-sm">
-                            <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">🐾</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">
+                                {profile?.avatar?.length > 4 ? <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" /> : profile?.avatar || '🐾'}
+                            </AvatarFallback>
                         </Avatar>
                         <div>
-                            <h2 className="text-lg sm:text-xl font-bold">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anon'}</h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg sm:text-xl font-bold">{getDisplayName(address)}</h2>
+                                <button
+                                    onClick={() => setUserEditing(true)}
+                                    className="p-1 hover:bg-black/5 rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                    title="Edit Profile"
+                                >
+                                    <Settings className="size-4" />
+                                </button>
+                            </div>
                             <div className="flex gap-3 text-xs sm:text-sm text-muted-foreground mt-1">
                                 <span><strong className="text-foreground">{stats.uploads}</strong> uploads</span>
                                 <span><strong className="text-foreground">{stats.receivedVotes}</strong> votes</span>

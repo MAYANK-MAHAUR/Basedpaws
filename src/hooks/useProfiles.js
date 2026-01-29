@@ -29,11 +29,11 @@ export function useProfiles() {
         return profiles[address.toLowerCase()] || null
     }, [profiles])
 
-    // Check if address has a profile set up
+    // Check if address has a profile set up or skipped
     const hasProfile = useCallback((address) => {
         if (!address) return false
         const profile = profiles[address.toLowerCase()]
-        return profile && profile.name
+        return profile && (profile.name || profile.skipped)
     }, [profiles])
 
     // Create or update profile

@@ -40,7 +40,11 @@ function AppContent() {
     }
 
     const handleProfileSkip = () => {
-        setProfile(address, { name: '', avatar: '🐾', skipped: true })
+        setProfile(address, {
+            name: `User${address.slice(2, 6)}`,
+            avatar: '🐾',
+            skipped: true
+        })
         setShowSetup(false)
     }
 
