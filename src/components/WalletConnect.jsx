@@ -62,11 +62,11 @@ export function WalletConnect() {
             {/* Wallet Selection Modal */}
             {showModal && (
                 <div
-                    className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+                    className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-end sm:justify-center p-4"
                     onClick={() => setShowModal(false)}
                 >
                     <div
-                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden max-h-[85vh] flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
+                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden flex flex-col max-h-[70vh] sm:max-h-[600px] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 pb-2 shrink-0">
