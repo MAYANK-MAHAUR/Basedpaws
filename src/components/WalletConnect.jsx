@@ -66,7 +66,7 @@ export function WalletConnect() {
                     onClick={() => setShowModal(false)}
                 >
                     <div
-                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden animate-in slide-in-from-bottom duration-300"
+                        className="bg-card w-full max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 pb-2">
