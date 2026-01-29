@@ -52,10 +52,14 @@ export function DonateModal({ photo, onClose }) {
         }
     }
 
-    if (isSuccess) {
-        updateDonations(photo.id, parseFloat(finalAmount))
-        setTimeout(onClose, 2000)
-    }
+    // Handle post-transaction success
+    useEffect(() => {
+        if (isSuccess) {
+            updateDonations(photo.id, parseFloat(finalAmount))
+            const timer = setTimeout(onClose, 2000)
+            return () => clearTimeout(timer)
+        }
+    }, [isSuccess])
 
     return (
         <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
