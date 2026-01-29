@@ -41,24 +41,24 @@ export function MyProfile({ onClose }) {
     const unlocked = ACHIEVEMENTS.filter((a) => a.check(stats))
 
     return (
-        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-card w-full max-w-2xl h-[80vh] flex flex-col rounded-2xl border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+            <div className="bg-card w-full h-[85vh] sm:h-[80vh] sm:max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border shadow-xl overflow-hidden animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div className="p-6 border-b flex items-start justify-between bg-secondary/20">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="size-16 border-2 border-background shadow-sm">
-                            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">🐾</AvatarFallback>
+                <div className="p-4 sm:p-6 border-b flex items-start justify-between bg-secondary/20 relative">
+                    <div className="w-12 h-1.5 bg-muted rounded-full absolute top-2 left-1/2 -translate-x-1/2 sm:hidden" />
+                    <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-0">
+                        <Avatar className="size-12 sm:size-16 border-2 border-background shadow-sm">
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">🐾</AvatarFallback>
                         </Avatar>
                         <div>
-                            <h2 className="text-xl font-bold">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anon'}</h2>
-                            <div className="flex gap-4 text-sm text-muted-foreground mt-1">
+                            <h2 className="text-lg sm:text-xl font-bold">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anon'}</h2>
+                            <div className="flex gap-3 text-xs sm:text-sm text-muted-foreground mt-1">
                                 <span><strong className="text-foreground">{stats.uploads}</strong> uploads</span>
                                 <span><strong className="text-foreground">{stats.receivedVotes}</strong> votes</span>
-                                <span><strong className="text-foreground">{unlocked.length}</strong> badges</span>
                             </div>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
+                    <Button variant="ghost" size="icon" onClick={onClose} className="hidden sm:flex">
                         <X className="size-5" />
                     </Button>
                 </div>

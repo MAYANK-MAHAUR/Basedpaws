@@ -51,8 +51,8 @@ export function PhotoFeed({ photos, loading }) {
                         <button
                             key={tab.id}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             onClick={() => setActiveTab(tab.id)}
                         >
@@ -69,7 +69,7 @@ export function PhotoFeed({ photos, loading }) {
                     <p className="text-muted-foreground">Be the first to share a funny pet!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                     {activePhotos.map(photo => (
                         <PhotoCard key={photo.id} photo={photo} />
                     ))}

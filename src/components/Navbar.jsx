@@ -36,78 +36,91 @@ export function Navbar() {
                         </div>
 
                         {/* Right side buttons */}
-                        <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            {/* Mobile: Only show Connect Wallet if not connected, or small address if connected */}
+                            <div className="md:hidden">
+                                <WalletConnect />
+                            </div>
+
+                            {/* Desktop: Show full buttons */}
+                            <div className="hidden md:flex items-center gap-3">
+                                {isConnected && (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2"
+                                            onClick={() => setShowUpload(true)}
+                                        >
+                                            <Upload className="size-4" />
+                                            Upload
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="gap-2"
+                                            onClick={() => setShowProfile(true)}
+                                        >
+                                            <User className="size-4" />
+                                            Profile
+                                        </Button>
+                                    </>
+                                )}
+                                <WalletConnect />
+                            </div>
+
+                            {/* Mobile menu button */}
+                            <button
+                                className="md:hidden p-2 rounded-lg hover:bg-secondary transition ml-2"
+                                onClick={() => setIsOpen(!isOpen)}
+                                aria-label="Toggle menu"
+                            >
+                                {isOpen ? (
+                                    <X className="size-5" />
+                                ) : (
+                                    <Menu className="size-5" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mobile Navigation */}
+                    {isOpen && (
+                        <div className="md:hidden pb-4 space-y-2 border-t pt-2 mt-2">
                             {isConnected && (
-                                <>
+                                <div className="grid grid-cols-2 gap-2 px-4 mb-4">
                                     <Button
                                         variant="outline"
-                                        size="sm"
-                                        className="gap-2"
-                                        onClick={() => setShowUpload(true)}
+                                        className="gap-2 justify-center"
+                                        onClick={() => { setShowUpload(true); setIsOpen(false); }}
                                     >
                                         <Upload className="size-4" />
                                         Upload
                                     </Button>
                                     <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="gap-2"
-                                        onClick={() => setShowProfile(true)}
+                                        variant="outline"
+                                        className="gap-2 justify-center"
+                                        onClick={() => { setShowProfile(true); setIsOpen(false); }}
                                     >
                                         <User className="size-4" />
                                         Profile
                                     </Button>
-                                </>
+                                </div>
                             )}
-                            <WalletConnect />
-                        </div>
-
-                        {/* Mobile menu button */}
-                        <button
-                            className="md:hidden p-2 rounded-lg hover:bg-secondary transition"
-                            onClick={() => setIsOpen(!isOpen)}
-                            aria-label="Toggle menu"
-                        >
-                            {isOpen ? (
-                                <X className="size-5" />
-                            ) : (
-                                <Menu className="size-5" />
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Mobile Navigation */}
-                    {isOpen && (
-                        <div className="md:hidden pb-4 space-y-2">
                             <a
                                 href="#feed"
-                                className="block px-4 py-2 rounded-lg hover:bg-secondary font-medium transition"
+                                className="block px-4 py-3 rounded-lg hover:bg-secondary font-medium transition"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Feed
                             </a>
                             <a
                                 href="#leaderboard"
-                                className="block px-4 py-2 rounded-lg hover:bg-secondary font-medium transition"
+                                className="block px-4 py-3 rounded-lg hover:bg-secondary font-medium transition"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Leaderboard
                             </a>
-                            <div className="px-4 py-2 space-y-2">
-                                {isConnected && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start gap-2"
-                                        onClick={() => { setShowUpload(true); setIsOpen(false); }}
-                                    >
-                                        <Upload className="size-4" />
-                                        Upload
-                                    </Button>
-                                )}
-                                <div className="pt-2">
-                                    <WalletConnect />
-                                </div>
-                            </div>
                         </div>
                     )}
                 </div>

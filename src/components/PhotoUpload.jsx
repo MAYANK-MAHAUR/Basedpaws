@@ -90,7 +90,7 @@ export function PhotoUpload({ onUploadComplete }) {
                 </div>
             ) : !preview ? (
                 <div
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer active:scale-95 touch-manipulation ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/50'
                         }`}
                     onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
                     onDragLeave={(e) => { e.preventDefault(); setIsDragging(false) }}
@@ -101,10 +101,10 @@ export function PhotoUpload({ onUploadComplete }) {
                     <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
                         <Upload className="size-8" />
                     </div>
-                    <p className="font-medium text-foreground mb-1">Drop your pet photo here</p>
-                    <p className="text-sm text-muted-foreground mb-4">or click to browse</p>
+                    <p className="font-medium text-foreground mb-1">Tap to Upload Photo</p>
+                    <p className="text-sm text-muted-foreground mb-4 hidden sm:block">or drag and drop here</p>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])} className="hidden" />
-                    <Button variant="outline" size="sm">Select Photo</Button>
+                    <Button variant="outline" size="sm" className="hidden sm:inline-flex">Select Photo</Button>
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">

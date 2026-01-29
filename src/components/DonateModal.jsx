@@ -41,9 +41,10 @@ export function DonateModal({ photo, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-card w-full max-w-sm rounded-xl border shadow-lg relative p-6" onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="absolute right-2 top-2" onClick={onClose}>
+        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+            <div className="bg-card w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl border shadow-lg relative p-6 animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
+                <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6 sm:hidden" /> {/* Drag handle for mobile */}
+                <Button variant="ghost" size="icon" className="absolute right-2 top-2 hidden sm:flex" onClick={onClose}>
                     <X className="size-4" />
                 </Button>
 
@@ -69,8 +70,8 @@ export function DonateModal({ photo, onClose }) {
                                     <button
                                         key={preset}
                                         className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors border ${amount === preset && !customAmount
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-background hover:bg-secondary border-input'
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-background hover:bg-secondary border-input'
                                             }`}
                                         onClick={() => { setAmount(preset); setCustomAmount('') }}
                                     >
