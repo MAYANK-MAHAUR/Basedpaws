@@ -8,6 +8,7 @@ import { Button } from './ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { X, Trophy, Edit, Trash2, Settings } from 'lucide-react'
 import { ProfileSetup } from './ProfileSetup'
+import { Basename } from './Basename'
 
 const getEditTimeLeft = (createdAt) => {
     const deadline = createdAt + 24 * 60 * 60 * 1000
@@ -72,7 +73,9 @@ export function MyProfile({ onClose }) {
                         </Avatar>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="text-lg sm:text-xl font-bold">{getDisplayName(address)}</h2>
+                                <h2 className="text-lg sm:text-xl font-bold">
+                                    <Basename address={address} />
+                                </h2>
                                 <button
                                     onClick={() => setUserEditing(true)}
                                     className="p-1 hover:bg-black/5 rounded-full text-muted-foreground hover:text-primary transition-colors"

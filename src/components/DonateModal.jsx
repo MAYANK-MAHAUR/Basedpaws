@@ -5,6 +5,7 @@ import { base } from 'wagmi/chains'
 import { usePhotos } from '../hooks/usePhotos'
 import { Button } from './ui/button'
 import { X, Loader2, Gift, AlertCircle } from 'lucide-react'
+import { triggerConfetti } from '../lib/confetti'
 
 const PRESET_AMOUNTS = ['0.001', '0.005', '0.01', '0.05']
 
@@ -55,6 +56,7 @@ export function DonateModal({ photo, onClose }) {
     // Handle post-transaction success
     useEffect(() => {
         if (isSuccess) {
+            triggerConfetti() // 🎉
             updateDonations(photo.id, parseFloat(finalAmount))
             const timer = setTimeout(onClose, 2000)
             return () => clearTimeout(timer)

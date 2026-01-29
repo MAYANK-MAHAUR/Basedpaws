@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
-import { Menu, X, Wallet, Upload, User, PawPrint } from 'lucide-react'
+import { Menu, X, Wallet, Upload, User, PawPrint, Users } from 'lucide-react'
 import { Button } from './ui/button'
 import { WalletConnect } from './WalletConnect'
 import { MyProfile } from './MyProfile'
 import { PhotoUpload } from './PhotoUpload'
+import { SupportButton } from './SupportButton'
+import { useUserCount } from '../hooks/useUserCount'
 
 export function Navbar() {
     const { isConnected } = useAccount()
+    const { count: userCount } = useUserCount()
     const [showProfile, setShowProfile] = useState(false)
     const [showUpload, setShowUpload] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
@@ -26,13 +29,19 @@ export function Navbar() {
                         </a>
 
                         {/* Desktop Navigation */}
-                        <div className="hidden md:flex items-center gap-8">
+                        <div className="hidden md:flex items-center gap-6">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="size-4" />
+                                <strong className="text-foreground">{userCount}</strong>
+                                <span className="hidden lg:inline">users</span>
+                            </div>
                             <a href="#feed" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
                                 Feed
                             </a>
                             <a href="#leaderboard" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
                                 Leaderboard
                             </a>
+                            <SupportButton />
                         </div>
 
                         {/* Right side buttons */}
@@ -87,6 +96,16 @@ export function Navbar() {
                     {/* Mobile Navigation */}
                     {isOpen && (
                         <div className="md:hidden pb-4 space-y-2 border-t pt-2 mt-2">
+                            {/* Mobile stats and support */}
+                            <div className="flex items-center justify-between px-4 py-2 mb-2">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Users className="size-4" />
+                                    <strong className="text-foreground">{userCount}</strong>
+                                    <span>users</span>
+                                </div>
+                                <SupportButton />
+                            </div>
+
                             {isConnected && (
                                 <div className="grid grid-cols-2 gap-2 px-4 mb-4">
                                     <Button

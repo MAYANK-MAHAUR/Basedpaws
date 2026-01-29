@@ -1,31 +1,21 @@
 import { useState, useRef } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useSignMessage } from 'wagmi'
 import { uploadToIPFS } from '../lib/ipfs'
 import { usePhotos } from '../hooks/usePhotos'
 import { Button } from './ui/button'
 import { Loader2, Upload, Image as ImageIcon, X } from 'lucide-react'
-
-function createConfetti() {
-    const colors = ['#FF6B9D', '#8B5CF6', '#0052FF', '#FFD700', '#00D4AA']
-    const container = document.createElement('div')
-    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;'
-    document.body.appendChild(container)
-    for (let i = 0; i < 50; i++) {
-        const confetti = document.createElement('div')
-        confetti.style.cssText = `position:absolute;width:${Math.random() * 10 + 5}px;height:${Math.random() * 10 + 5}px;background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}%;top:-20px;border-radius:${Math.random() > 0.5 ? '50%' : '0'};animation:confetti-fall ${Math.random() * 2 + 2}s ease-out forwards;`
-        container.appendChild(confetti)
-    }
-    setTimeout(() => container.remove(), 4000)
-}
+import { triggerConfetti } from '../lib/confetti'
 
 export function PhotoUpload({ onUploadComplete }) {
     const { isConnected, address } = useAccount()
+    const { signMessageAsync } = useSignMessage()
     const { addPhoto } = usePhotos()
     const [isDragging, setIsDragging] = useState(false)
     const [preview, setPreview] = useState(null)
     const [title, setTitle] = useState('')
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
+    const [signing, setSigning] = useState(false)
     const [success, setSuccess] = useState(false)
     const fileInputRef = useRef(null)
 
@@ -40,8 +30,16 @@ export function PhotoUpload({ onUploadComplete }) {
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!file || !title.trim()) return
-        setUploading(true)
+
         try {
+            // Step 1: Sign message to prove ownership
+            setSigning(true)
+            const message = `I'm uploading "${title.trim()}" to BasedPaws\n\nTimestamp: ${Date.now()}`
+            await signMessageAsync({ message })
+            setSigning(false)
+
+            // Step 2: Upload to IPFS
+            setUploading(true)
             const result = await uploadToIPFS(file)
             addPhoto({
                 title: title.trim(),
@@ -50,7 +48,7 @@ export function PhotoUpload({ onUploadComplete }) {
                 ownerAddress: address
             })
             setSuccess(true)
-            createConfetti()
+            triggerConfetti()
             setTimeout(() => {
                 setFile(null)
                 setPreview(null)
@@ -60,8 +58,13 @@ export function PhotoUpload({ onUploadComplete }) {
             }, 1500)
         } catch (error) {
             console.error('Upload failed:', error)
-            alert('Upload failed')
+            if (error.message?.includes('User rejected')) {
+                // User cancelled signing
+            } else {
+                alert('Upload failed')
+            }
         } finally {
+            setSigning(false)
             setUploading(false)
         }
     }
@@ -129,8 +132,14 @@ export function PhotoUpload({ onUploadComplete }) {
                         autoFocus
                     />
 
-                    <Button type="submit" size="lg" className="w-full" disabled={uploading || !title.trim()}>
-                        {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>) : (<>🚀 Share Photo</>)}
+                    <Button type="submit" size="lg" className="w-full" disabled={signing || uploading || !title.trim()}>
+                        {signing ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sign to Continue...</>
+                        ) : uploading ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+                        ) : (
+                            <>🚀 Share Photo</>
+                        )}
                     </Button>
                 </form>
             )}

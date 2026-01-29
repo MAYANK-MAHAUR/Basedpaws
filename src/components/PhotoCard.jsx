@@ -7,8 +7,10 @@ import { useProfiles } from '../hooks/useProfiles'
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
-import { Heart, Gift, Loader2, X, MessageCircle } from 'lucide-react'
+import { Heart, Gift, Loader2, X, Share2 } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { Basename } from './Basename'
+import { triggerConfetti } from '../lib/confetti'
 
 export function PhotoCard({ photo }) {
     const { address, isConnected } = useAccount()
@@ -22,7 +24,6 @@ export function PhotoCard({ photo }) {
 
     const votes = getVoteCount(photo.id)
     const voted = hasVoted(photo.id, address)
-    const uploaderName = getDisplayName(photo.ownerAddress)
     const uploaderAvatar = getAvatar(photo.ownerAddress)
 
     const formatDate = (timestamp) => {
@@ -44,12 +45,20 @@ export function PhotoCard({ photo }) {
                 const message = `I vote for "${photo.title}" on BasedPaws\n\nPhoto ID: ${photo.id}\nTimestamp: ${Date.now()}`
                 await signMessageAsync({ message })
                 addVote(photo.id, address)
+                triggerConfetti() // 🎉
             }
         } catch (error) {
             console.error('Vote failed:', error)
         } finally {
             setSigning(false)
         }
+    }
+
+    const handleShare = (e) => {
+        e.stopPropagation()
+        const text = `Checking out ${photo.title} on BasedPaws! 🐕 #BasedPaws @base`
+        const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`
+        window.open(url, '_blank')
     }
 
     const imageUrl = photo.imageUrl || getIPFSUrl(photo.cid)
@@ -75,7 +84,7 @@ export function PhotoCard({ photo }) {
                         <Avatar className="size-5">
                             <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{uploaderAvatar}</AvatarFallback>
                         </Avatar>
-                        <span className="truncate max-w-[100px]">{uploaderName}</span>
+                        <Basename address={photo.ownerAddress} className="truncate max-w-[100px]" />
                     </div>
                 </div>
 
@@ -110,64 +119,78 @@ export function PhotoCard({ photo }) {
 
             {/* Details Modal */}
             {showDetails && (
-                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDetails(false)}>
-                    <div className="bg-card w-full max-w-4xl h-[80vh] md:h-auto md:aspect-video rounded-3xl border shadow-2xl overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowDetails(false)}>
+                    <div className="bg-card w-full h-[90vh] sm:h-auto sm:max-h-[85vh] sm:max-w-4xl sm:aspect-video rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden flex flex-col sm:flex-row" onClick={(e) => e.stopPropagation()}>
+                        {/* Mobile drag handle */}
+                        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mt-2 sm:hidden shrink-0" />
+
                         {/* Close Button Mob */}
-                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 md:hidden z-10 bg-black/20 text-white" onClick={() => setShowDetails(false)}>
+                        <Button variant="ghost" size="icon" className="absolute top-3 right-3 sm:hidden z-10 bg-black/40 text-white hover:bg-black/60" onClick={() => setShowDetails(false)}>
                             <X className="size-5" />
                         </Button>
 
                         {/* Image Side */}
-                        <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center">
+                        <div className="relative w-full h-[40%] sm:h-auto sm:w-3/5 bg-black flex items-center justify-center shrink-0">
                             <img src={imageUrl} alt={photo.title} className="max-h-full max-w-full object-contain" />
                         </div>
 
                         {/* Info Side */}
-                        <div className="flex-1 flex flex-col p-6 md:p-8 bg-card relative">
-                            <Button variant="ghost" size="icon" className="absolute top-4 right-4 hidden md:flex" onClick={() => setShowDetails(false)}>
+                        <div className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 bg-card relative overflow-hidden">
+                            <Button variant="ghost" size="icon" className="absolute top-4 right-4 hidden sm:flex" onClick={() => setShowDetails(false)}>
                                 <X className="size-5" />
                             </Button>
 
-                            <div className="flex items-center gap-3 mb-6">
-                                <Avatar className="size-10 border">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                                <Avatar className="size-8 sm:size-10 border">
                                     <AvatarFallback className="bg-primary/10 text-primary">{uploaderAvatar}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Uploaded by</p>
-                                    <p className="font-semibold">{uploaderName}</p>
+                                    <p className="text-xs sm:text-sm font-medium text-muted-foreground">Uploaded by</p>
+                                    <p className="font-semibold text-sm sm:text-base"><Basename address={photo.ownerAddress} /></p>
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto">
-                                <h2 className="text-2xl font-bold mb-2">{photo.title}</h2>
-                                <p className="text-muted-foreground text-sm mb-6">Posted {formatDate(photo.createdAt)}</p>
+                            <div className="flex-1 overflow-y-auto min-h-0">
+                                <h2 className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">{photo.title}</h2>
+                                <p className="text-muted-foreground text-xs sm:text-sm mb-4 sm:mb-6">Posted {formatDate(photo.createdAt)}</p>
 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="p-4 rounded-xl bg-secondary/50 border">
-                                        <p className="text-sm text-muted-foreground mb-1">Total Votes</p>
-                                        <p className="text-2xl font-bold flex items-center gap-2">
-                                            {votes} <Heart className="size-5 text-red-500 fill-red-500" />
+                                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                                    <div className="p-3 sm:p-4 rounded-xl bg-secondary/50 border">
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Votes</p>
+                                        <p className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+                                            {votes} <Heart className="size-4 sm:size-5 text-red-500 fill-red-500" />
                                         </p>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-secondary/50 border">
-                                        <p className="text-sm text-muted-foreground mb-1">Tips Earned</p>
-                                        <p className="text-2xl font-bold flex items-center gap-2">
-                                            {photo.donations ? photo.donations.toFixed(4) : 0} <span className="text-base text-primary">ETH</span>
+                                    <div className="p-3 sm:p-4 rounded-xl bg-secondary/50 border">
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Tips Earned</p>
+                                        <p className="text-lg sm:text-2xl font-bold flex items-center gap-1 sm:gap-2">
+                                            {photo.donations ? photo.donations.toFixed(4) : 0} <span className="text-sm sm:text-base text-primary">ETH</span>
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t space-y-3">
-                                <Button
-                                    size="lg"
-                                    className={cn("w-full gap-2", voted && "bg-red-500 hover:bg-red-600")}
-                                    onClick={handleVote}
-                                    disabled={!isConnected || signing}
-                                >
-                                    {signing ? <Loader2 className="size-5 animate-spin" /> : <Heart className={cn("size-5", voted && "fill-current")} />}
-                                    {voted ? "Voted" : "Vote for this pet"}
-                                </Button>
+                            <div className="pt-4 sm:pt-6 border-t space-y-2 sm:space-y-3 shrink-0">
+                                <div className="flex gap-3">
+                                    <Button
+                                        size="lg"
+                                        className={cn("flex-[2] gap-2", voted && "bg-red-500 hover:bg-red-600")}
+                                        onClick={handleVote}
+                                        disabled={!isConnected || signing}
+                                    >
+                                        {signing ? <Loader2 className="size-5 animate-spin" /> : <Heart className={cn("size-5", voted && "fill-current")} />}
+                                        {voted ? "Voted" : "Vote"}
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="lg"
+                                        className="flex-1 gap-2"
+                                        onClick={handleShare}
+                                    >
+                                        <Share2 className="size-5" />
+                                        Cast
+                                    </Button>
+                                </div>
                                 <Button
                                     variant="outline"
                                     size="lg"

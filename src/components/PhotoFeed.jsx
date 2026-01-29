@@ -39,18 +39,18 @@ export function PhotoFeed({ photos, loading }) {
     const activePhotos = tabs.find(t => t.id === activeTab)?.photos || []
 
     return (
-        <section className="space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <section className="space-y-6 sm:space-y-8">
+            <div className="flex flex-col gap-4">
                 <div className="space-y-1 text-center md:text-left">
-                    <h2 className="text-3xl font-bold tracking-tight">Recent Uploads</h2>
-                    <p className="text-muted-foreground">Discover amazing pet photos from the community</p>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Recent Uploads</h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">Discover amazing pet photos from the community</p>
                 </div>
 
-                <div className="flex p-1 bg-secondary rounded-lg">
+                <div className="flex p-1 bg-secondary rounded-lg overflow-x-auto">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
+                            className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
                                 ? 'bg-background text-foreground shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground'
                                 }`}
