@@ -4,6 +4,11 @@ import { getIPFSUrl } from '../lib/ipfs'
 import { DonateModal } from './DonateModal'
 import { useVotes } from '../hooks/useVotes'
 import { useProfiles } from '../hooks/useProfiles'
+import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Button } from './ui/button'
+import { Heart, Gift, Loader2, X, MessageCircle } from 'lucide-react'
+import { cn } from '../lib/utils'
 
 export function PhotoCard({ photo }) {
     const { address, isConnected } = useAccount()
@@ -27,7 +32,8 @@ export function PhotoCard({ photo }) {
         return new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }
 
-    const handleVote = async () => {
+    const handleVote = async (e) => {
+        e.stopPropagation();
         if (!isConnected || !address) return
 
         setSigning(true)
@@ -50,119 +56,128 @@ export function PhotoCard({ photo }) {
 
     return (
         <>
-            <div className="photo-card">
-                {/* Uploader Profile Badge */}
-                <div className="uploader-badge" onClick={() => setShowDetails(true)}>
-                    <div className="uploader-avatar">{uploaderAvatar}</div>
-                </div>
-
-                <div className="photo-image-container" onClick={() => setShowDetails(true)}>
+            <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group border-border/60" onClick={() => setShowDetails(true)}>
+                <div className="relative aspect-square bg-secondary/20">
                     {!imageError ? (
                         <img
                             src={imageUrl}
                             alt={photo.title}
-                            className="photo-image"
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                             onError={() => setImageError(true)}
                         />
                     ) : (
-                        <div className="photo-placeholder">
-                            <span>🐾</span>
-                            <p>Image not available</p>
+                        <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
+                            <span className="text-4xl mb-2">🐾</span>
+                            <p className="text-sm">Image unavailable</p>
                         </div>
                     )}
-                </div>
-
-                <div className="photo-content">
-                    <h3 className="photo-title">{photo.title}</h3>
-                    <div className="photo-meta">
-                        <span className="photo-uploader">by {uploaderName}</span>
-                        <span>{formatDate(photo.createdAt)}</span>
+                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium shadow-sm">
+                        <Avatar className="size-5">
+                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{uploaderAvatar}</AvatarFallback>
+                        </Avatar>
+                        <span className="truncate max-w-[100px]">{uploaderName}</span>
                     </div>
                 </div>
 
-                <div className="photo-actions">
-                    <button
-                        className={`btn-vote ${voted ? 'voted' : ''} ${signing ? 'signing' : ''}`}
+                <CardContent className="p-4">
+                    <h3 className="font-semibold truncate mb-1">{photo.title}</h3>
+                    <p className="text-xs text-muted-foreground">{formatDate(photo.createdAt)}</p>
+                </CardContent>
+
+                <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+                    <Button
+                        variant={voted ? "default" : "secondary"}
+                        size="sm"
+                        className={cn("flex-1 gap-1.5", voted && "bg-red-500 hover:bg-red-600 text-white")}
                         onClick={handleVote}
                         disabled={!isConnected || signing}
                     >
-                        {signing ? (
-                            <>
-                                <span className="spinner" style={{ width: 14, height: 14 }}></span>
-                                <span>Signing...</span>
-                            </>
-                        ) : (
-                            <>
-                                <span>{voted ? '❤️' : '🤍'}</span>
-                                <span>{votes}</span>
-                            </>
-                        )}
-                    </button>
-
-                    <button
-                        className="btn-donate"
-                        onClick={() => setShowDonate(true)}
+                        {signing ? <Loader2 className="size-3 animate-spin" /> : <Heart className={cn("size-3.5", voted && "fill-current")} />}
+                        {votes}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-1.5"
+                        onClick={(e) => { e.stopPropagation(); setShowDonate(true); }}
                         disabled={!isConnected}
                     >
-                        <span>🎁</span> Tip
-                    </button>
-                </div>
-            </div>
+                        <Gift className="size-3.5" />
+                        Tip
+                    </Button>
+                </CardFooter>
+            </Card>
 
-            {/* Photo Details Modal */}
+            {/* Details Modal */}
             {showDetails && (
-                <div className="modal-overlay" onClick={() => setShowDetails(false)}>
-                    <div className="photo-details-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowDetails(false)}>✕</button>
+                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDetails(false)}>
+                    <div className="bg-card w-full max-w-4xl h-[80vh] md:h-auto md:aspect-video rounded-3xl border shadow-2xl overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+                        {/* Close Button Mob */}
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 md:hidden z-10 bg-black/20 text-white" onClick={() => setShowDetails(false)}>
+                            <X className="size-5" />
+                        </Button>
 
-                        <div className="details-image">
-                            <img src={imageUrl} alt={photo.title} />
+                        {/* Image Side */}
+                        <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center">
+                            <img src={imageUrl} alt={photo.title} className="max-h-full max-w-full object-contain" />
                         </div>
 
-                        <div className="details-content">
-                            <h2>{photo.title}</h2>
+                        {/* Info Side */}
+                        <div className="flex-1 flex flex-col p-6 md:p-8 bg-card relative">
+                            <Button variant="ghost" size="icon" className="absolute top-4 right-4 hidden md:flex" onClick={() => setShowDetails(false)}>
+                                <X className="size-5" />
+                            </Button>
 
-                            <div className="uploader-info">
-                                <div className="uploader-avatar-large">{uploaderAvatar}</div>
-                                <div className="uploader-details">
-                                    <span className="uploader-label">Uploaded by</span>
-                                    <span className="uploader-address">{uploaderName}</span>
+                            <div className="flex items-center gap-3 mb-6">
+                                <Avatar className="size-10 border">
+                                    <AvatarFallback className="bg-primary/10 text-primary">{uploaderAvatar}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Uploaded by</p>
+                                    <p className="font-semibold">{uploaderName}</p>
                                 </div>
                             </div>
 
-                            <div className="details-stats">
-                                <div className="detail-stat">
-                                    <span className="detail-value">❤️ {votes}</span>
-                                    <span className="detail-label">Votes</span>
-                                </div>
-                                <div className="detail-stat">
-                                    <span className="detail-value">📅 {formatDate(photo.createdAt)}</span>
-                                    <span className="detail-label">Uploaded</span>
-                                </div>
-                                {photo.donations > 0 && (
-                                    <div className="detail-stat">
-                                        <span className="detail-value">💰 {photo.donations.toFixed(4)}</span>
-                                        <span className="detail-label">ETH Tips</span>
+                            <div className="flex-1 overflow-y-auto">
+                                <h2 className="text-2xl font-bold mb-2">{photo.title}</h2>
+                                <p className="text-muted-foreground text-sm mb-6">Posted {formatDate(photo.createdAt)}</p>
+
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="p-4 rounded-xl bg-secondary/50 border">
+                                        <p className="text-sm text-muted-foreground mb-1">Total Votes</p>
+                                        <p className="text-2xl font-bold flex items-center gap-2">
+                                            {votes} <Heart className="size-5 text-red-500 fill-red-500" />
+                                        </p>
                                     </div>
-                                )}
+                                    <div className="p-4 rounded-xl bg-secondary/50 border">
+                                        <p className="text-sm text-muted-foreground mb-1">Tips Earned</p>
+                                        <p className="text-2xl font-bold flex items-center gap-2">
+                                            {photo.donations ? photo.donations.toFixed(4) : 0} <span className="text-base text-primary">ETH</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="details-actions">
-                                <button
-                                    className={`btn btn-lg ${voted ? 'btn-outline' : 'btn-primary'}`}
+                            <div className="pt-6 border-t space-y-3">
+                                <Button
+                                    size="lg"
+                                    className={cn("w-full gap-2", voted && "bg-red-500 hover:bg-red-600")}
                                     onClick={handleVote}
                                     disabled={!isConnected || signing}
                                 >
-                                    {signing ? 'Signing...' : voted ? '❤️ Voted' : '🤍 Vote'}
-                                </button>
-                                <button
-                                    className="btn btn-lg"
-                                    style={{ background: 'var(--gradient-fire)', color: 'white' }}
-                                    onClick={() => { setShowDetails(false); setShowDonate(true) }}
+                                    {signing ? <Loader2 className="size-5 animate-spin" /> : <Heart className={cn("size-5", voted && "fill-current")} />}
+                                    {voted ? "Voted" : "Vote for this pet"}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="w-full gap-2"
+                                    onClick={() => { setShowDetails(false); setShowDonate(true); }}
                                     disabled={!isConnected}
                                 >
-                                    🎁 Send Tip
-                                </button>
+                                    <Gift className="size-5" />
+                                    Send a Tip
+                                </Button>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { PhotoCard } from './PhotoCard'
 import { useVotes } from '../hooks/useVotes'
+import { Button } from './ui/button'
+import { Loader2 } from 'lucide-react'
 
 export function PhotoFeed({ photos, loading }) {
     const { getVoteCount } = useVotes()
@@ -8,11 +10,9 @@ export function PhotoFeed({ photos, loading }) {
 
     if (loading) {
         return (
-            <section className="feed-section">
-                <div className="feed-loading">
-                    <div className="spinner" style={{ width: 32, height: 32 }}></div>
-                    <p>Loading pets...</p>
-                </div>
+            <section className="py-20 text-center">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary mb-4" />
+                <p className="text-muted-foreground">Loading pets...</p>
             </section>
         )
     }
@@ -39,32 +39,48 @@ export function PhotoFeed({ photos, loading }) {
     const activePhotos = tabs.find(t => t.id === activeTab)?.photos || []
 
     return (
-        <section className="feed-section">
-            <div className="feed-tabs">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        className={`feed-tab ${activeTab === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+        <section className="space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="space-y-1 text-center md:text-left">
+                    <h2 className="text-3xl font-bold tracking-tight">Recent Uploads</h2>
+                    <p className="text-muted-foreground">Discover amazing pet photos from the community</p>
+                </div>
+
+                <div className="flex p-1 bg-secondary rounded-lg">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            onClick={() => setActiveTab(tab.id)}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {activePhotos.length === 0 ? (
-                <div className="feed-empty">
-                    <span>🐾</span>
-                    <h3>No photos yet</h3>
-                    <p>Be the first to share a funny pet!</p>
+                <div className="py-20 text-center bg-secondary/20 rounded-3xl border border-dashed border-border/60">
+                    <span className="text-6xl mb-4 block">🐾</span>
+                    <h3 className="text-xl font-semibold mb-2">No photos yet</h3>
+                    <p className="text-muted-foreground">Be the first to share a funny pet!</p>
                 </div>
             ) : (
-                <div className="photo-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {activePhotos.map(photo => (
                         <PhotoCard key={photo.id} photo={photo} />
                     ))}
                 </div>
             )}
+
+            <div className="text-center pt-8">
+                <Button variant="outline" size="lg" className="rounded-full px-8">
+                    Load More
+                </Button>
+            </div>
         </section>
     )
 }

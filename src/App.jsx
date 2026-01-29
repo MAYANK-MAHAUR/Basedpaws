@@ -15,6 +15,8 @@ import './App.css'
 
 const queryClient = new QueryClient()
 
+import { Hero } from './components/Hero'
+
 function AppContent() {
     const { address, isConnected } = useAccount()
     const { photos, loading } = usePhotos()
@@ -43,30 +45,28 @@ function AppContent() {
     }
 
     return (
-        <div className="app">
+        <div className="min-h-screen bg-background font-sans antialiased text-foreground">
             <Navbar />
 
-            <main className="main-content">
-                {/* Hero */}
-                <header className="hero">
-                    <h1 className="hero-title">
-                        <span className="gradient-text">BasedPaws</span> 🐾
-                    </h1>
-                    <p className="hero-subtitle">
-                        The funniest pet photos on Base • Vote • Win • Get Tips
-                    </p>
-                </header>
+            <main>
+                <Hero />
 
-                {/* Monthly Leaderboard - Top 3 */}
-                <Leaderboard photos={photos} />
+                <div className="container mx-auto px-4 py-12 space-y-24">
+                    <div id="leaderboard" className="scroll-mt-24">
+                        <Leaderboard photos={photos} />
+                    </div>
 
-                {/* Photo Feeds */}
-                <PhotoFeed photos={photos} loading={loading} />
+                    <div id="feed" className="scroll-mt-24">
+                        <PhotoFeed photos={photos} loading={loading} />
+                    </div>
+                </div>
             </main>
 
-            <footer className="footer">
-                <p>Built with 💙 on <span className="base-logo">Base</span></p>
-                <p className="footer-note">Free to use • Sign to vote • Win monthly 🏆</p>
+            <footer className="border-t py-12 bg-secondary/20">
+                <div className="container mx-auto px-4 text-center space-y-4">
+                    <p className="font-semibold">Built with 💙 on <span className="text-primary">Base</span></p>
+                    <p className="text-sm text-muted-foreground">Free to use • Sign to vote • Win monthly 🏆</p>
+                </div>
             </footer>
 
             {showSetup && (

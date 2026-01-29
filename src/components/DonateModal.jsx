@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther } from 'viem'
 import { usePhotos } from '../hooks/usePhotos'
+import { Button } from './ui/button'
+import { X, Loader2, Gift } from 'lucide-react'
 
 const PRESET_AMOUNTS = ['0.001', '0.005', '0.01', '0.05']
 
@@ -39,33 +41,45 @@ export function DonateModal({ photo, onClose }) {
     }
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3 className="modal-title">🎁 Tip Creator</h3>
-                    <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-card w-full max-w-sm rounded-xl border shadow-lg relative p-6" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="absolute right-2 top-2" onClick={onClose}>
+                    <X className="size-4" />
+                </Button>
+
+                <div className="text-center space-y-2 mb-6">
+                    <div className="inline-flex p-3 bg-primary/10 rounded-full text-primary mb-2">
+                        <Gift className="size-8" />
+                    </div>
+                    <h3 className="text-xl font-bold">Tip Creator</h3>
+                    <p className="text-sm text-muted-foreground">Support this pet's owner with ETH</p>
                 </div>
-                <div className="modal-body">
+
+                <div className="space-y-4">
                     {isSuccess ? (
-                        <div style={{ textAlign: 'center', padding: '2rem' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-                            <h3>Tip Sent!</h3>
-                            <p style={{ color: 'var(--text-secondary)' }}>{finalAmount} ETH sent to creator</p>
+                        <div className="text-center py-8 space-y-2">
+                            <span className="text-4xl block animate-bounce">🎉</span>
+                            <h3 className="font-bold text-lg">Tip Sent!</h3>
+                            <p className="text-muted-foreground">{finalAmount} ETH sent to creator</p>
                         </div>
                     ) : (
                         <>
-                            <div className="amount-presets">
+                            <div className="grid grid-cols-4 gap-2">
                                 {PRESET_AMOUNTS.map((preset) => (
                                     <button
                                         key={preset}
-                                        className={`preset-btn ${amount === preset && !customAmount ? 'active' : ''}`}
+                                        className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors border ${amount === preset && !customAmount
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-background hover:bg-secondary border-input'
+                                            }`}
                                         onClick={() => { setAmount(preset); setCustomAmount('') }}
                                     >
-                                        {preset} ETH
+                                        {preset}
                                     </button>
                                 ))}
                             </div>
-                            <div className="custom-amount">
+
+                            <div className="relative">
                                 <input
                                     type="number"
                                     step="0.001"
@@ -73,21 +87,25 @@ export function DonateModal({ photo, onClose }) {
                                     placeholder="Custom amount..."
                                     value={customAmount}
                                     onChange={(e) => setCustomAmount(e.target.value)}
-                                    className="form-input"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
+                                <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">ETH</span>
                             </div>
-                            {error && <div className="error-message">{error}</div>}
-                            <button
-                                className="btn btn-primary btn-full btn-lg"
+
+                            {error && <div className="text-xs text-red-500 font-medium">{error}</div>}
+
+                            <Button
+                                size="lg"
+                                className="w-full"
                                 onClick={handleDonate}
                                 disabled={!isConnected || isPending || isConfirming}
                             >
                                 {isPending || isConfirming ? (
-                                    <><span className="spinner"></span>{isConfirming ? 'Confirming...' : 'Sending...'}</>
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isConfirming ? 'Confirming...' : 'Sending...'}</>
                                 ) : (
                                     <>Send {finalAmount} ETH</>
                                 )}
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>

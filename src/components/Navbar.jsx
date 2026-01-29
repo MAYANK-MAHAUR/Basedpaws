@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { Menu, X, Wallet, Upload, User, PawPrint } from 'lucide-react'
+import { Button } from './ui/button'
 import { WalletConnect } from './WalletConnect'
 import { MyProfile } from './MyProfile'
 import { PhotoUpload } from './PhotoUpload'
@@ -8,41 +10,125 @@ export function Navbar() {
     const { isConnected } = useAccount()
     const [showProfile, setShowProfile] = useState(false)
     const [showUpload, setShowUpload] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
 
     return (
         <>
-            <nav className="navbar">
-                <div className="navbar-brand">
-                    <span className="logo-icon">🐾</span>
-                    <span className="logo-text">BasedPaws</span>
-                </div>
-                <div className="navbar-actions">
-                    {isConnected && (
-                        <>
-                            <button
-                                className="btn btn-primary btn-sm"
-                                onClick={() => setShowUpload(true)}
+            <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        {/* Logo */}
+                        <a href="#" className="flex items-center gap-2 flex-shrink-0">
+                            <div className="size-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                                <PawPrint className="size-5" />
+                            </div>
+                            <span className="text-xl font-bold tracking-tight">BasedPaws</span>
+                        </a>
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden md:flex items-center gap-8">
+                            <a href="#feed" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+                                Feed
+                            </a>
+                            <a href="#leaderboard" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+                                Leaderboard
+                            </a>
+                        </div>
+
+                        {/* Right side buttons */}
+                        <div className="hidden md:flex items-center gap-3">
+                            {isConnected && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2"
+                                        onClick={() => setShowUpload(true)}
+                                    >
+                                        <Upload className="size-4" />
+                                        Upload
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="gap-2"
+                                        onClick={() => setShowProfile(true)}
+                                    >
+                                        <User className="size-4" />
+                                        Profile
+                                    </Button>
+                                </>
+                            )}
+                            <WalletConnect />
+                        </div>
+
+                        {/* Mobile menu button */}
+                        <button
+                            className="md:hidden p-2 rounded-lg hover:bg-secondary transition"
+                            onClick={() => setIsOpen(!isOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {isOpen ? (
+                                <X className="size-5" />
+                            ) : (
+                                <Menu className="size-5" />
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Mobile Navigation */}
+                    {isOpen && (
+                        <div className="md:hidden pb-4 space-y-2">
+                            <a
+                                href="#feed"
+                                className="block px-4 py-2 rounded-lg hover:bg-secondary font-medium transition"
+                                onClick={() => setIsOpen(false)}
                             >
-                                📸 Upload
-                            </button>
-                            <button
-                                className="btn btn-ghost"
-                                onClick={() => setShowProfile(true)}
+                                Feed
+                            </a>
+                            <a
+                                href="#leaderboard"
+                                className="block px-4 py-2 rounded-lg hover:bg-secondary font-medium transition"
+                                onClick={() => setIsOpen(false)}
                             >
-                                👤 Profile
-                            </button>
-                        </>
+                                Leaderboard
+                            </a>
+                            <div className="px-4 py-2 space-y-2">
+                                {isConnected && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start gap-2"
+                                        onClick={() => { setShowUpload(true); setIsOpen(false); }}
+                                    >
+                                        <Upload className="size-4" />
+                                        Upload
+                                    </Button>
+                                )}
+                                <div className="pt-2">
+                                    <WalletConnect />
+                                </div>
+                            </div>
+                        </div>
                     )}
-                    <WalletConnect />
                 </div>
             </nav>
 
             {/* Upload Modal */}
             {showUpload && (
-                <div className="modal-overlay" onClick={() => setShowUpload(false)}>
-                    <div className="upload-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowUpload(false)}>✕</button>
-                        <PhotoUpload onUploadComplete={() => setShowUpload(false)} />
+                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowUpload(false)}>
+                    <div className="bg-card text-card-foreground w-full max-w-md rounded-xl border shadow-lg relative" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-2 rounded-full"
+                            onClick={() => setShowUpload(false)}
+                        >
+                            <X className="size-4" />
+                        </Button>
+                        <div className="p-6">
+                            <h2 className="text-xl font-bold mb-4">Upload Pet Photo</h2>
+                            <PhotoUpload onUploadComplete={() => setShowUpload(false)} />
+                        </div>
                     </div>
                 </div>
             )}

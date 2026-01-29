@@ -1,4 +1,6 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { Button } from './ui/button'
+import { Wallet, LogOut, Loader2 } from 'lucide-react'
 
 export function WalletConnect() {
     const { address, isConnected } = useAccount()
@@ -15,38 +17,41 @@ export function WalletConnect() {
 
     if (isConnected) {
         return (
-            <div className="wallet-connected">
-                <div className="wallet-address">
-                    <span className="address-dot"></span>
+            <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full text-sm font-medium">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     {truncateAddress(address)}
                 </div>
-                <button
-                    className="btn btn-outline btn-sm"
+                <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => disconnect()}
+                    className="gap-2"
                 >
-                    Disconnect
-                </button>
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">Disconnect</span>
+                </Button>
             </div>
         )
     }
 
     return (
-        <button
-            className="btn btn-primary"
+        <Button
             onClick={() => connector && connect({ connector })}
             disabled={isPending || !connector}
+            className="gap-2 rounded-full"
         >
             {isPending ? (
                 <>
-                    <span className="spinner"></span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Connecting...
                 </>
             ) : (
                 <>
-                    <span>🔗</span>
+                    <Wallet className="w-4 h-4" />
                     Connect Wallet
                 </>
             )}
-        </button>
+        </Button>
     )
 }
