@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAccount } from 'wagmi'
+import { sdk } from '@farcaster/miniapp-sdk'
 import { config } from './lib/wagmi'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Navbar } from './components/Navbar'
@@ -19,6 +20,10 @@ function AppContent() {
     const { photos, loading } = usePhotos()
     const { hasProfile, setProfile } = useProfiles()
     const [showSetup, setShowSetup] = useState(false)
+
+    useEffect(() => {
+        sdk.actions.ready();
+    }, []);
 
     useEffect(() => {
         if (isConnected && address && !hasProfile(address)) {
