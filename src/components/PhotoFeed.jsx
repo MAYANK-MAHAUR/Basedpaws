@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PhotoCard } from './PhotoCard'
-import { useVotes } from '../hooks/useVotes'
+import { useVotes } from '../hooks/useVotes.jsx'
 import { Button } from './ui/button'
 import { Loader2 } from 'lucide-react'
 import { sortByFeedScore, applyDiversity, getTrending, getTopVoted, getRecent } from '../lib/feedAlgorithm'

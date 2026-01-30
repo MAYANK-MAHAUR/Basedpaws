@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+
+const VotesContext = createContext(null)
 
 const VOTES_KEY = 'basedpaws_votes'
 
@@ -25,56 +27,62 @@ function saveLocalVotes(votes, userVotes) {
     localStorage.setItem(VOTES_KEY + '_user', JSON.stringify(userVotes))
 }
 
-export function useVotes() {
+export function VotesProvider({ children }) {
     const [votes, setVotes] = useState({}) // { photoId: voteCount }
     const [userVotes, setUserVotes] = useState({}) // { `${photoId}_${address}`: true }
 
     // Load votes
-    useEffect(() => {
-        async function loadVotes() {
-            if (isSupabaseConfigured()) {
-                // Load vote counts from photos table
-                const { data: photos, error: photosError } = await supabase
-                    .from('photos')
-                    .select('id, votes')
+    const loadVotes = useCallback(async () => {
+        if (isSupabaseConfigured()) {
+            // Load vote counts from photos table
+            const { data: photos, error: photosError } = await supabase
+                .from('photos')
+                .select('id, votes')
 
-                if (!photosError && photos) {
-                    const voteMap = {}
-                    photos.forEach(p => {
-                        voteMap[p.id] = p.votes || 0
-                    })
-                    setVotes(voteMap)
-                }
-
-                // Load user votes from votes table
-                const { data: votesData, error: votesError } = await supabase
-                    .from('votes')
-                    .select('photo_id, voter_address')
-
-                if (!votesError && votesData) {
-                    const userVoteMap = {}
-                    votesData.forEach(v => {
-                        userVoteMap[`${v.photo_id}_${v.voter_address}`] = true
-                    })
-                    setUserVotes(userVoteMap)
-                }
-            } else {
-                setVotes(getLocalVotes())
-                setUserVotes(getLocalUserVotes())
+            if (!photosError && photos) {
+                const voteMap = {}
+                photos.forEach(p => {
+                    voteMap[p.id] = p.votes || 0
+                })
+                setVotes(voteMap)
             }
-        }
 
+            // Load user votes from votes table
+            const { data: votesData, error: votesError } = await supabase
+                .from('votes')
+                .select('photo_id, voter_address')
+
+            if (!votesError && votesData) {
+                const userVoteMap = {}
+                votesData.forEach(v => {
+                    userVoteMap[`${v.photo_id}_${v.voter_address}`] = true
+                })
+                setUserVotes(userVoteMap)
+            }
+        } else {
+            setVotes(getLocalVotes())
+            setUserVotes(getLocalUserVotes())
+        }
+    }, [])
+
+    useEffect(() => {
         loadVotes()
 
         // Subscribe to real-time changes
         if (isSupabaseConfigured()) {
             const subscription = supabase
-                .channel('votes_changes')
+                .channel('votes_realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => {
                     loadVotes()
                 })
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'photos' }, () => {
-                    loadVotes()
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'photos' }, (payload) => {
+                    // Update vote count for specific photo
+                    if (payload.new && payload.new.votes !== undefined) {
+                        setVotes(prev => ({
+                            ...prev,
+                            [payload.new.id]: payload.new.votes
+                        }))
+                    }
                 })
                 .subscribe()
 
@@ -82,7 +90,7 @@ export function useVotes() {
                 subscription.unsubscribe()
             }
         }
-    }, [])
+    }, [loadVotes])
 
     // Add a vote
     const addVote = useCallback(async (photoId, address) => {
@@ -115,12 +123,10 @@ export function useVotes() {
             }
 
             // Update photo vote count
-            const { error: updateError } = await supabase
+            await supabase
                 .from('photos')
                 .update({ votes: currentVotes + 1 })
                 .eq('id', photoId)
-
-            if (updateError) console.error('Supabase vote count update error:', updateError)
         } else {
             saveLocalVotes(newVotes, newUserVotes)
         }
@@ -133,7 +139,8 @@ export function useVotes() {
         if (!userVotes[voteKey]) return // Hasn't voted
 
         const currentVotes = votes[photoId] || 0
-        const newVotes = { ...votes, [photoId]: Math.max(0, currentVotes - 1) }
+        const newVoteCount = Math.max(0, currentVotes - 1)
+        const newVotes = { ...votes, [photoId]: newVoteCount }
         const newUserVotes = { ...userVotes }
         delete newUserVotes[voteKey]
 
@@ -158,12 +165,10 @@ export function useVotes() {
             }
 
             // Update photo vote count
-            const { error: updateError } = await supabase
+            await supabase
                 .from('photos')
-                .update({ votes: Math.max(0, currentVotes - 1) })
+                .update({ votes: newVoteCount })
                 .eq('id', photoId)
-
-            if (updateError) console.error('Supabase vote count update error:', updateError)
         } else {
             saveLocalVotes(newVotes, newUserVotes)
         }
@@ -186,12 +191,27 @@ export function useVotes() {
         return Object.keys(userVotes).filter(key => key.endsWith(`_${address}`)).length
     }, [userVotes])
 
-    return {
+    const value = {
         votes,
         addVote,
         removeVote,
         hasVoted,
         getVoteCount,
         getAllVotesCount,
+        refreshVotes: loadVotes,
     }
+
+    return (
+        <VotesContext.Provider value={value}>
+            {children}
+        </VotesContext.Provider>
+    )
+}
+
+export function useVotes() {
+    const context = useContext(VotesContext)
+    if (!context) {
+        throw new Error('useVotes must be used within a VotesProvider')
+    }
+    return context
 }

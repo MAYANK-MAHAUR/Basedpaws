@@ -10,6 +10,8 @@ import { Leaderboard } from './components/Leaderboard'
 import { PhotoFeed } from './components/PhotoFeed'
 import { ProfileSetup } from './components/ProfileSetup'
 import { usePhotos, PhotosProvider } from './hooks/usePhotos.jsx'
+import { VotesProvider } from './hooks/useVotes.jsx'
+import { CommentsProvider } from './hooks/useComments.jsx'
 import { useProfiles } from './hooks/useProfiles'
 import { useUserCount } from './hooks/useUserCount'
 import './App.css'
@@ -99,7 +101,11 @@ function App() {
             <WagmiProvider config={config}>
                 <QueryClientProvider client={queryClient}>
                     <PhotosProvider>
-                        <AppContent />
+                        <VotesProvider>
+                            <CommentsProvider>
+                                <AppContent />
+                            </CommentsProvider>
+                        </VotesProvider>
                     </PhotosProvider>
                 </QueryClientProvider>
             </WagmiProvider>

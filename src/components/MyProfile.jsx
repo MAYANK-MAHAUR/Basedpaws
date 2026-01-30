@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { usePhotos } from '../hooks/usePhotos.jsx'
-import { useVotes } from '../hooks/useVotes'
+import { useVotes } from '../hooks/useVotes.jsx'
 import { useProfiles } from '../hooks/useProfiles'
 import { getIPFSUrl } from '../lib/ipfs'
 import { Button } from './ui/button'

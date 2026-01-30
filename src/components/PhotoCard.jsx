@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { getIPFSUrl } from '../lib/ipfs'
 import { DonateModal } from './DonateModal'
-import { useVotes } from '../hooks/useVotes'
+import { useVotes } from '../hooks/useVotes.jsx'
 import { useProfiles } from '../hooks/useProfiles'
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
@@ -12,6 +12,7 @@ import { cn } from '../lib/utils'
 import { Basename } from './Basename'
 import { triggerConfetti } from '../lib/confetti'
 import { generateOGImage, downloadOGImage, copyOGImageToClipboard } from '../lib/ogImage'
+import { CommentsSection } from './CommentsSection'
 
 export function PhotoCard({ photo }) {
     const { address, isConnected } = useAccount()
@@ -224,6 +225,11 @@ export function PhotoCard({ photo }) {
                                             {photo.donations ? photo.donations.toFixed(4) : 0} <span className="text-sm sm:text-base text-primary">ETH</span>
                                         </p>
                                     </div>
+                                </div>
+
+                                {/* Comments Section */}
+                                <div className="mt-4">
+                                    <CommentsSection photoId={photo.id} />
                                 </div>
                             </div>
 

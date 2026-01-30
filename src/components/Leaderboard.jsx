@@ -1,5 +1,5 @@
 import { useProfiles } from '../hooks/useProfiles'
-import { useVotes } from '../hooks/useVotes'
+import { useVotes } from '../hooks/useVotes.jsx'
 import { Card } from './ui/card'
 import { Medal, TrendingUp } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
