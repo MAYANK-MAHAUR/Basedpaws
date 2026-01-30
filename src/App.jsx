@@ -9,7 +9,7 @@ import { Navbar } from './components/Navbar'
 import { Leaderboard } from './components/Leaderboard'
 import { PhotoFeed } from './components/PhotoFeed'
 import { ProfileSetup } from './components/ProfileSetup'
-import { usePhotos } from './hooks/usePhotos'
+import { usePhotos, PhotosProvider } from './hooks/usePhotos.jsx'
 import { useProfiles } from './hooks/useProfiles'
 import { useUserCount } from './hooks/useUserCount'
 import './App.css'
@@ -98,7 +98,9 @@ function App() {
         <ErrorBoundary>
             <WagmiProvider config={config}>
                 <QueryClientProvider client={queryClient}>
-                    <AppContent />
+                    <PhotosProvider>
+                        <AppContent />
+                    </PhotosProvider>
                 </QueryClientProvider>
             </WagmiProvider>
         </ErrorBoundary>
